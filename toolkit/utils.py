@@ -14,6 +14,8 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from konlpy.tag import Okt
+import requests
 import torch
 import tiktoken
 from langchain.vectorstores import Chroma
@@ -23,8 +25,9 @@ from langchain.embeddings import HuggingFaceEmbeddings, HuggingFaceInstructEmbed
 from langchain.embeddings.openai import OpenAIEmbeddings
 
 
-tokenizer_name = tiktoken.encoding_for_model("gpt-3.5-turbo")
-tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+# tokenizer_name = tiktoken.encoding_for_model("gpt-4o")
+# tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+tokenizer = tiktoken.get_encoding("cl100k_base")
 
 # if nltk stopwords, punkt and wordnet are not downloaded, download it
 try:
@@ -190,7 +193,7 @@ def load_pickle(prefix, suffix, path):
         return pickle.load(file)
 
 
-def clean_text(text):
+def clean_text_ori(text):
     """
     Converts text to lowercase, removes punctuation, stopwords, and lemmatizes it
     for BM25 retriever.
@@ -228,6 +231,32 @@ def clean_text(text):
     lemmatized_ = " ".join(lemmatized)
 
     return lemmatized_
+
+def clean_text(text):
+    """ Clean text of Korean ver """
+    
+    # get stopwords
+    url = "https://raw.githubusercontent.com/stopwords-iso/stopwords-ko/master/stopwords-ko.txt"
+    response = requests.get(url)
+    stopwords = set(response.text.splitlines())
+
+    okt = Okt()
+
+    # 구두점 제거 (정규 표현식 사용) - remove punctuations
+    text = re.sub(r'[^\w\s]', '', text)
+    
+    # 형태소 분석 및 어간 추출 - remove morphs
+    tokens = okt.morphs(text, stem=True)
+    
+    # 불용어 제거
+    tokens = [token for token in tokens if token not in stopwords]
+    
+    # Convert list of words to a string
+    lemmatized_ = " ".join(tokens)
+
+    # 처리된 단어들 반환
+    return lemmatized_
+
 
 
 class IndexerOperator(Enum):

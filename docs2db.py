@@ -34,8 +34,9 @@ os.environ["ANTHROPIC_API_KEY"] = configs.anthropic_api_key
 embedding_store_path = configs.db_dir
 files_path = glob.glob(configs.docs_dir + "/*")
 
-tokenizer_name = tiktoken.encoding_for_model("gpt-3.5-turbo")
-tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+# tokenizer_name = tiktoken.encoding_for_model("gpt-4o")
+# tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+tokenizer = tiktoken.get_encoding("cl100k_base")
 
 loaders = {
     "pdf": (PyPDFLoader, {}),
